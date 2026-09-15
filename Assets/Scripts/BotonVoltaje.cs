@@ -51,5 +51,7 @@ public class BotonVoltaje : MonoBehaviour
             control.Subir();
         else
             control.Bajar();
+
+        SonidosCircuito.Reproducir(SonidoLab.BotonVoltaje, this);
     }
 }

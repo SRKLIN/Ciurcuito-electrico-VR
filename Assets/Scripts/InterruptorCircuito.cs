@@ -44,6 +44,8 @@ public class InterruptorCircuito : MonoBehaviour
             return;
 
         ultimoToque = Time.time;
+
         circuito.Alternar();
+        SonidosCircuito.Reproducir(SonidoLab.ClicInterruptor, this);
     }
 }

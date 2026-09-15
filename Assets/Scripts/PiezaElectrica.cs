@@ -7,7 +7,10 @@ public enum TipoPieza
     Interruptor,
     Bombilla,
     Resistencia,
-    Cable
+    Cable,
+    Condensador,
+    Diodo,
+    Motor
 }
 
 /// <summary>

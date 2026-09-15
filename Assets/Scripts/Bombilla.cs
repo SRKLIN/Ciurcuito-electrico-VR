@@ -35,17 +35,40 @@ public class Bombilla : MonoBehaviour
 
     private void Awake()
     {
+        Preparar();
+        AplicarBrillo(0f);
+    }
+
+    /// <summary>
+    /// Crea la instancia de material la primera vez que hace falta.
+    /// Al entrar en Play, Unity llama a OnValidate de otros scripts ANTES de
+    /// este Awake, y esos scripts ya piden brillo: sin esto saltaba una
+    /// UnassignedReferenceException en la primera linea de AplicarBrillo.
+    /// En modo edicion devuelve false a proposito, para no dejar instancias
+    /// de material sueltas en la escena.
+    /// </summary>
+    private bool Preparar()
+    {
+        if (material != null)
+            return true;
+
+        if (!Application.isPlaying)
+            return false;
+
         // .material (no .sharedMaterial) crea una instancia propia,
         // asi no se pisa el material del asset ni el de otras bombillas.
         material = GetComponent<Renderer>().material;
         material.EnableKeyword("_EMISSION");
         colorOriginal = LeerColorBase();
-        AplicarBrillo(0f);
+        return true;
     }
 
     /// <summary>Ajusta el brillo. 0 = apagada, 1 = brillo nominal. Una bombilla quemada ignora esto.</summary>
     public void AplicarBrillo(float brillo)
     {
+        if (!Preparar())
+            return;
+
         if (Quemada)
             brillo = 0f;
 
@@ -72,6 +95,8 @@ public class Bombilla : MonoBehaviour
 
         if (efectoExplosion != null)
             efectoExplosion.Play();
+
+        SonidosCircuito.Reproducir(SonidoLab.BombillaQuemada, this);
     }
 
     /// <summary>La reemplaza por una nueva.</summary>
@@ -82,6 +107,8 @@ public class Bombilla : MonoBehaviour
 
         Quemada = false;
         PintarBase(colorOriginal);
+
+        SonidosCircuito.Reproducir(SonidoLab.BombillaCambiada, this);
     }
 
     private Color LeerColorBase()
@@ -91,6 +118,9 @@ public class Bombilla : MonoBehaviour
 
     private void PintarBase(Color c)
     {
+        if (!Preparar())
+            return;
+
         if (material.HasProperty(BaseColor))
             material.SetColor(BaseColor, c);
         else
