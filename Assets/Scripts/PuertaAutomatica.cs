@@ -21,6 +21,9 @@ public class PuertaAutomatica : MonoBehaviour
     [Tooltip("A quien detecta. Vacio = busca la camara principal al arrancar.")]
     [SerializeField] private Transform jugador;
 
+    [Tooltip("Otros que tambien la abren, como el guia. Vacio = solo el jugador.")]
+    [SerializeField] private Transform[] tambienAbren;
+
     [Header("Comportamiento")]
     [Tooltip("A esta distancia o menos, la puerta se abre.")]
     [SerializeField] private float distanciaApertura = 2.5f;
@@ -56,17 +59,13 @@ public class PuertaAutomatica : MonoBehaviour
 
     private void Update()
     {
-        if (jugador == null)
+        float cerca = DistanciaAlMasCercano();
+
+        if (float.IsPositiveInfinity(cerca))
             return;
 
-        // Distancia en planta: la altura de la cabeza no tiene que influir.
-        Vector3 aqui = transform.position;
-        Vector3 alla = jugador.position;
-        aqui.y = 0f;
-        alla.y = 0f;
-
         float limite = abierta ? distanciaApertura + histeresis : distanciaApertura;
-        bool deberiaAbrir = Vector3.Distance(aqui, alla) <= limite;
+        bool deberiaAbrir = cerca <= limite;
 
         if (deberiaAbrir != abierta)
         {
@@ -86,5 +85,38 @@ public class PuertaAutomatica : MonoBehaviour
 
         if (hojaDerecha != null)
             hojaDerecha.localPosition = cerradaDerecha + Vector3.right * (recorrido * apertura);
+    }
+
+    /// <summary>
+    /// Lo mas cerca que hay alguien que pueda abrirla. Infinito si no hay nadie
+    /// asignado. La puerta la abre el primero que llegue, sea el jugador o el guia.
+    /// </summary>
+    private float DistanciaAlMasCercano()
+    {
+        float menor = float.PositiveInfinity;
+
+        menor = Mathf.Min(menor, DistanciaEnPlanta(jugador));
+
+        if (tambienAbren != null)
+            foreach (Transform quien in tambienAbren)
+                menor = Mathf.Min(menor, DistanciaEnPlanta(quien));
+
+        return menor;
+    }
+
+    /// <summary>
+    /// Distancia ignorando la altura: agacharse o estirarse no tiene que contar.
+    /// </summary>
+    private float DistanciaEnPlanta(Transform quien)
+    {
+        if (quien == null)
+            return float.PositiveInfinity;
+
+        Vector3 aqui = transform.position;
+        Vector3 alla = quien.position;
+        aqui.y = 0f;
+        alla.y = 0f;
+
+        return Vector3.Distance(aqui, alla);
     }
 }
